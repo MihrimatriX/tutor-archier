@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TutorArchier.Core/TutorArchier.Core.csproj" />
+    <Project Path="src/TutorArchier.Data/TutorArchier.Data.csproj" />
+    <Project Path="src/TutorArchier.Engine/TutorArchier.Engine.csproj" />
+    <Project Path="src/TutorArchier.UI/TutorArchier.UI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TutorArchier.Tests/TutorArchier.Tests.csproj" />
+  </Folder>
+</Solution>

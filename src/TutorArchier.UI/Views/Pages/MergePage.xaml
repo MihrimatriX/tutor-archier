@@ -1,0 +1,308 @@
+<Page x:Class="TutorArchier.UI.Views.Pages.MergePage"
+      ScrollViewer.CanContentScroll="False"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:vm="clr-namespace:TutorArchier.UI.ViewModels"
+      xmlns:controls="clr-namespace:TutorArchier.UI.Controls"
+      xmlns:conv="clr-namespace:TutorArchier.UI.Converters"
+      mc:Ignorable="d"
+      d:DataContext="{d:DesignInstance vm:MergeViewModel}"
+      d:DesignWidth="1000"
+      d:DesignHeight="900"
+      Title="Birleştir">
+  <Page.Resources>
+    <conv:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+    <conv:BoolToVisibilityConverter x:Key="InverseBoolToVisibility" Invert="True" />
+    <conv:NullToVisibilityConverter x:Key="NullToVisibility" />
+
+    <Style x:Key="Cell" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+  </Page.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- The page scrolls itself: CanContentScroll="False" on the Page stops WPF-UI from wrapping it in a second ScrollViewer. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <StackPanel Style="{StaticResource PageColumn}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBlock Style="{StaticResource Text.Display}" Text="Birleştir" />
+          <ui:Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding PickFolderCommand}" Content="Klasör seç" Icon="{ui:SymbolIcon FolderOpen24}" />
+        </Grid>
+        <TextBlock Margin="0,8,0,0"
+                   Style="{StaticResource Text.Muted}"
+                   Text="Klasördeki dersleri bölümlü, altyazılı MKV ya da MP4'lerde toplar; alt klasörler varsa her biri ayrı video olur. Orijinal dosyalara dokunulmaz."
+                   Visibility="{Binding Workspace.HasFolder, Converter={StaticResource InverseBoolToVisibility}}" />
+
+        <controls:CourseHeader Margin="0,20,0,0" DataContext="{Binding Workspace}" Visibility="{Binding HasFolder, Converter={StaticResource BoolToVisibility}}" />
+
+        <!-- Scanning / errors -->
+        <ProgressBar Height="3"
+                     Margin="0,8,0,0"
+                     Maximum="100"
+                     Value="{Binding Workspace.AnalysisProgress, Mode=OneWay}"
+                     Visibility="{Binding Workspace.IsAnalyzing, Converter={StaticResource BoolToVisibility}}" />
+        <Border Margin="0,16,0,0" Style="{StaticResource Panel}" Visibility="{Binding Workspace.AnalysisError, Converter={StaticResource NullToVisibility}}">
+          <controls:StatusIndicator Kind="Danger" Text="{Binding Workspace.AnalysisError}" />
+        </Border>
+        <Border Margin="0,16,0,0" Style="{StaticResource Panel}" Visibility="{Binding PlanError, Converter={StaticResource NullToVisibility}}">
+          <controls:StatusIndicator Kind="Danger" Text="{Binding PlanError}" />
+        </Border>
+
+        <StackPanel Visibility="{Binding HasPlan, Converter={StaticResource BoolToVisibility}}">
+          <!-- Options: how the course is cut, how it's encoded, where it goes. -->
+          <TextBlock Style="{StaticResource Text.Section}" Text="Seçenekler" />
+          <Border Padding="0" Style="{StaticResource Panel}">
+            <StackPanel>
+              <StackPanel Visibility="{Binding CanSplit, Converter={StaticResource BoolToVisibility}}">
+                <Grid Margin="20,16">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <Border Style="{StaticResource IconTile}">
+                    <ui:SymbolIcon Symbol="SplitVertical24" />
+                  </Border>
+                  <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                    <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="Her alt klasör ayrı video" />
+                    <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Caption}" Text="Her alt klasör kendi videosu olur, içindeki dersler onun bölümleri. Kapalıyken bütün kurs, alt klasörler dahil, tek bir bölümlü video olur." />
+                  </StackPanel>
+                  <ui:ToggleSwitch Grid.Column="2" VerticalAlignment="Center" IsChecked="{Binding IsSplit}" />
+                </Grid>
+                <Border Style="{StaticResource Divider}" />
+              </StackPanel>
+
+              <StackPanel Margin="20,16">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <Border Style="{StaticResource IconTile}">
+                    <ui:SymbolIcon Symbol="Archive24" />
+                  </Border>
+                  <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                    <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="Sıkıştırarak arşivle" />
+                    <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Caption}" Text="HEVC 10-bit'e kodlar; kaliteyi VMAF ile ölçüp farkın gözle seçilmediği en küçük boyutu seçer. Kayıpsız birleştirmeden uzun sürer." />
+                  </StackPanel>
+                  <ui:ToggleSwitch Grid.Column="2" VerticalAlignment="Center" IsChecked="{Binding IsArchive}" />
+                </Grid>
+                <StackPanel Margin="56,12,0,0" Visibility="{Binding IsSearching, Converter={StaticResource BoolToVisibility}}">
+                  <Grid>
+                    <controls:StatusIndicator VerticalAlignment="Center" Kind="Running" Text="{Binding SearchText}" />
+                    <ui:Button HorizontalAlignment="Right"
+                               Appearance="Transparent"
+                               BorderThickness="0"
+                               Command="{Binding CancelSearchCommand}"
+                               Content="İptal" />
+                  </Grid>
+                  <ProgressBar Height="4" Margin="24,8,0,0" Maximum="100" Value="{Binding SearchProgress, Mode=OneWay}" />
+                </StackPanel>
+                <controls:StatusIndicator Margin="56,12,0,0" Kind="{Binding ArchiveKind}" Text="{Binding ArchiveText}" Visibility="{Binding ArchiveText, Converter={StaticResource NullToVisibility}}" />
+                <controls:StatusIndicator Margin="56,12,0,0" Kind="Danger" Text="{Binding ArchiveError}" Visibility="{Binding ArchiveError, Converter={StaticResource NullToVisibility}}" />
+              </StackPanel>
+              <Border Style="{StaticResource Divider}" />
+
+              <Grid Margin="20,16">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource IconTile}">
+                  <ui:SymbolIcon Symbol="Video24" />
+                </Border>
+                <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                  <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="MP4 olarak kaydet" />
+                  <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Caption}" Text="Telefon, TV ve tarayıcıların çoğu açar; bölümler ve altyazılar korunur. MP4'e girmeyen ses ya da görüntü biçimleri dönüştürülür." />
+                </StackPanel>
+                <ui:ToggleSwitch Grid.Column="2" VerticalAlignment="Center" IsChecked="{Binding IsMp4}" />
+              </Grid>
+              <Border Style="{StaticResource Divider}" />
+
+              <StackPanel Visibility="{Binding CanBundle, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel Margin="20,16">
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource IconTile}">
+                      <ui:SymbolIcon Symbol="FolderZip24" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                      <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="Ek dosyaları zip'le" />
+                      <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Caption}" Text="Videoya girmeyen her şeyi (PDF, kod, görseller, okunamayan dosyalar) klasör yapısıyla resource klasörüne zip'ler. Kodlamayla aynı anda çalışır." />
+                    </StackPanel>
+                    <ui:ToggleSwitch Grid.Column="2" VerticalAlignment="Center" IsChecked="{Binding IsBundling}" />
+                  </Grid>
+                  <controls:StatusIndicator Margin="56,12,0,0" Kind="Info" Text="{Binding BundleText}" Visibility="{Binding BundleText, Converter={StaticResource NullToVisibility}}" />
+                </StackPanel>
+                <Border Style="{StaticResource Divider}" />
+              </StackPanel>
+
+              <StackPanel Margin="20,16">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <Border Style="{StaticResource IconTile}">
+                    <ui:SymbolIcon Symbol="Save24" />
+                  </Border>
+                  <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                    <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="{Binding OutputName}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                    <TextBlock Margin="0,2,0,0"
+                               Style="{StaticResource Text.Caption}"
+                               Text="{Binding OutputFolder}"
+                               TextTrimming="CharacterEllipsis"
+                               TextWrapping="NoWrap"
+                               ToolTip="{Binding OutputFolder}" />
+                  </StackPanel>
+                  <ui:Button Grid.Column="2" VerticalAlignment="Center" Command="{Binding ChangeOutputCommand}" Content="Değiştir" Icon="{ui:SymbolIcon Edit24}" />
+                </Grid>
+                <controls:StatusIndicator Margin="56,12,0,0" Kind="Warning" Text="{Binding SpaceWarning}" Visibility="{Binding SpaceWarning, Converter={StaticResource NullToVisibility}}" />
+                <controls:StatusIndicator Margin="56,12,0,0" Kind="Warning" Text="{Binding SkippedText}" Visibility="{Binding SkippedText, Converter={StaticResource NullToVisibility}}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <!-- What happens to the picture and the subtitles, side by side. -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="3*" />
+              <ColumnDefinition Width="12" />
+              <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBlock Style="{StaticResource Text.Section}" Text="Video" />
+            <Border Grid.Row="1" Style="{StaticResource Panel}">
+              <StackPanel>
+                <TextBlock Style="{StaticResource Text.Overline}" Text="HEDEF FORMAT" />
+                <TextBlock Margin="0,6,0,0" Style="{StaticResource Text.Body}" Text="{Binding TargetText}" />
+                <TextBlock Margin="0,4,0,0" Style="{StaticResource Text.Caption}" Text="{Binding TargetNote}" />
+                <controls:StatusIndicator Margin="0,16,0,0" Kind="Success" Text="{Binding CopyText}" Visibility="{Binding CopyText, Converter={StaticResource NullToVisibility}}" />
+                <controls:StatusIndicator Margin="0,8,0,0" Kind="Info" Text="{Binding PrepareText}" Visibility="{Binding PrepareText, Converter={StaticResource NullToVisibility}}" />
+              </StackPanel>
+            </Border>
+
+            <TextBlock Grid.Column="2" Style="{StaticResource Text.Section}" Text="Altyazılar" />
+            <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource Panel}">
+              <StackPanel>
+                <ItemsControl ItemsSource="{Binding Tracks}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:SubtitleTrackRow}">
+                      <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="*" />
+                          <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="{Binding Title}" />
+                        <controls:StatusIndicator Grid.Column="1" Kind="{Binding Kind}" Text="{Binding Coverage}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Style="{StaticResource Text.Caption}" Text="{Binding SubtitleNote}" />
+              </StackPanel>
+            </Border>
+          </Grid>
+
+          <!-- Chapters of the one video, or the videos when each subfolder gets its own. -->
+          <TextBlock Style="{StaticResource Text.Section}" Text="{Binding RowsTitle}" />
+          <Border Padding="8,12" Style="{StaticResource Panel}">
+            <StackPanel>
+              <Grid Margin="12,0,12,8">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="36" />
+                  <ColumnDefinition Width="80" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="90" />
+                  <ColumnDefinition Width="190" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Style="{StaticResource Text.Overline}" Text="#" />
+                <TextBlock Grid.Column="2" Style="{StaticResource Text.Overline}" Text="{Binding RowTitleHeader}" />
+                <TextBlock Grid.Column="3" Style="{StaticResource Text.Overline}" Text="{Binding RowTimeHeader}" />
+                <TextBlock Grid.Column="4" Style="{StaticResource Text.Overline}" Text="İŞLEM" />
+              </Grid>
+              <Border Style="{StaticResource Divider}" />
+              <ListView MaxHeight="520" Margin="0,4,0,0" ItemsSource="{Binding Rows}" Style="{StaticResource TableList}">
+                <ListView.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:ChapterRow}">
+                    <Grid Height="48">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="36" />
+                        <ColumnDefinition Width="80" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="190" />
+                      </Grid.ColumnDefinitions>
+                      <TextBlock Foreground="{DynamicResource Brush.TextMuted}" Style="{StaticResource Cell}" Text="{Binding Number}" />
+                      <controls:VideoThumb Grid.Column="1" Width="64" Height="36" HorizontalAlignment="Left" CornerRadius="4" Video="{Binding Video}" />
+                      <TextBlock Grid.Column="2" Margin="0,0,12,0" Style="{StaticResource Cell}" Text="{Binding Title}" ToolTip="{Binding Title}" />
+                      <TextBlock Grid.Column="3" Style="{StaticResource Cell}" Text="{Binding Start}" Typography.NumeralAlignment="Tabular" />
+                      <controls:StatusIndicator Grid.Column="4" VerticalAlignment="Center" Kind="{Binding Kind}" Text="{Binding Action}" />
+                    </Grid>
+                  </DataTemplate>
+                </ListView.ItemTemplate>
+              </ListView>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Always in reach: what will be made, and the button that queues it. -->
+    <Border Grid.Row="1"
+            Background="{DynamicResource Brush.Surface}"
+            BorderBrush="{DynamicResource Brush.Border}"
+            BorderThickness="0,1,0,0"
+            Visibility="{Binding HasPlan, Converter={StaticResource BoolToVisibility}}">
+      <Grid Margin="40,14">
+        <Grid.ColumnDefinitions>
+          <!-- Same width as the page column above, so the button lines up with the cards. -->
+          <ColumnDefinition Width="*" MaxWidth="960" />
+          <ColumnDefinition Width="0*" />
+        </Grid.ColumnDefinitions>
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="{Binding FooterTitle}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+            <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Caption}" Text="{Binding FooterDetail}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+          </StackPanel>
+          <ui:Button Grid.Column="1"
+                     MinWidth="170"
+                     Margin="16,0,0,0"
+                     Appearance="Primary"
+                     Command="{Binding EnqueueCommand}"
+                     Content="Kuyruğa ekle"
+                     Icon="{ui:SymbolIcon AddSquare24}"
+                     ToolTip="İş kuyrukta duraklatılabilir; uygulama kapansa bile kaldığı bölümden devam eder." />
+        </Grid>
+      </Grid>
+    </Border>
+  </Grid>
+</Page>

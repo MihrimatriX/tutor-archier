@@ -1,0 +1,109 @@
+<Page x:Class="TutorArchier.UI.Views.Pages.QueuePage"
+      ScrollViewer.CanContentScroll="False"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:vm="clr-namespace:TutorArchier.UI.ViewModels"
+      xmlns:controls="clr-namespace:TutorArchier.UI.Controls"
+      xmlns:conv="clr-namespace:TutorArchier.UI.Converters"
+      mc:Ignorable="d"
+      d:DataContext="{d:DesignInstance vm:QueueViewModel}"
+      d:DesignWidth="1000"
+      d:DesignHeight="700"
+      Title="Kuyruk">
+  <Page.Resources>
+    <conv:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+  </Page.Resources>
+
+  <!-- The page scrolls itself: CanContentScroll="False" on the Page stops WPF-UI from wrapping it in a second ScrollViewer. -->
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Style="{StaticResource PageColumn}">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Style="{StaticResource Text.Display}" Text="Kuyruk" />
+        <ui:Button Grid.Column="1"
+                   VerticalAlignment="Center"
+                   Command="{Binding ClearFinishedCommand}"
+                   Content="Bitenleri temizle"
+                   Icon="{ui:SymbolIcon Broom24}"
+                   Visibility="{Binding HasFinished, Converter={StaticResource BoolToVisibility}}" />
+      </Grid>
+      <TextBlock Margin="0,8,0,24"
+                 Style="{StaticResource Text.Muted}"
+                 Text="İşler sırayla çalışır. Duraklatılan ya da uygulama kapanınca yarıda kalan bir iş, kaldığı bölümden devam eder." />
+
+      <!-- Empty state -->
+      <Border Style="{StaticResource Panel}" Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Border Style="{StaticResource IconTile}">
+            <ui:SymbolIcon Symbol="TaskListLtr24" />
+          </Border>
+          <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+            <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="Kuyruk boş" />
+            <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Caption}" Text="Birleştir ekranında bir klasörü kuyruğa eklediğinde burada görünür." />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <ItemsControl ItemsSource="{Binding Jobs}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="{x:Type vm:JobRow}">
+            <Border Margin="0,0,0,8" Style="{StaticResource Panel}">
+              <StackPanel>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <controls:VideoThumb Width="96" Height="54" VerticalAlignment="Top" Video="{Binding Cover}" />
+                  <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                    <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                    <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Caption}" Text="{Binding OutputPath}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                  </StackPanel>
+                  <Border Grid.Column="2" VerticalAlignment="Top" Style="{StaticResource Chip}" Margin="0">
+                    <controls:StatusIndicator Kind="{Binding BadgeKind}" Text="{Binding BadgeText}" />
+                  </Border>
+                </Grid>
+
+                <ProgressBar Height="4"
+                             Margin="112,14,0,0"
+                             Maximum="100"
+                             Value="{Binding Progress, Mode=OneWay}"
+                             Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
+                <TextBlock x:Name="DetailText" Margin="112,8,0,0" Style="{StaticResource Text.Caption}" Text="{Binding Detail}" />
+
+                <StackPanel Margin="112,12,0,0" Orientation="Horizontal">
+                  <ui:Button Margin="0,0,8,0" Command="{Binding PauseCommand}" Content="Duraklat" Icon="{ui:SymbolIcon Pause24}"
+                             Visibility="{Binding CanPause, Converter={StaticResource BoolToVisibility}}" />
+                  <ui:Button Margin="0,0,8,0" Appearance="Primary" Command="{Binding ResumeCommand}" Content="Devam et" Icon="{ui:SymbolIcon Play24}"
+                             Visibility="{Binding CanResume, Converter={StaticResource BoolToVisibility}}" />
+                  <ui:Button Margin="0,0,8,0" Appearance="Primary" Command="{Binding OpenCommand}" Content="Klasörde göster" Icon="{ui:SymbolIcon FolderOpen24}"
+                             Visibility="{Binding CanOpen, Converter={StaticResource BoolToVisibility}}" />
+                  <ui:Button Margin="0,0,8,0" Command="{Binding CancelCommand}" Content="İptal" Icon="{ui:SymbolIcon Dismiss24}"
+                             Visibility="{Binding CanCancel, Converter={StaticResource BoolToVisibility}}" />
+                  <ui:Button Appearance="Transparent" BorderThickness="0" Command="{Binding RemoveCommand}" Content="Listeden kaldır" Icon="{ui:SymbolIcon Delete24}"
+                             Visibility="{Binding CanRemove, Converter={StaticResource BoolToVisibility}}" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+              <DataTrigger Binding="{Binding BadgeKind}" Value="Danger">
+                <Setter TargetName="DetailText" Property="Foreground" Value="{DynamicResource Brush.Danger}" />
+              </DataTrigger>
+            </DataTemplate.Triggers>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</Page>

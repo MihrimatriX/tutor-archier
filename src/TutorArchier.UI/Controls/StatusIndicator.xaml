@@ -1,0 +1,22 @@
+<UserControl x:Class="TutorArchier.UI.Controls.StatusIndicator"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             x:Name="Root">
+  <StackPanel Orientation="Horizontal">
+    <Grid Width="16" Height="16" VerticalAlignment="Center">
+      <ui:SymbolIcon x:Name="Icon" FontSize="16" Filled="True" />
+      <ui:ProgressRing x:Name="Ring"
+                       Width="14"
+                       Height="14"
+                       IsIndeterminate="True"
+                       Visibility="Collapsed" />
+    </Grid>
+    <TextBlock x:Name="Label"
+               Margin="8,0,0,0"
+               VerticalAlignment="Center"
+               Style="{StaticResource Text.Body}"
+               Text="{Binding Text, ElementName=Root}"
+               TextWrapping="Wrap" />
+  </StackPanel>
+</UserControl>

@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <Company>TutorArchier</Company>
+    <Product>TutorArchier</Product>
+    <Version>0.2.0</Version>
+  </PropertyGroup>
+</Project>

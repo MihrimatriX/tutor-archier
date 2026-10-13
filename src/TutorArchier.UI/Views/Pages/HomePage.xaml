@@ -1,0 +1,192 @@
+<Page x:Class="TutorArchier.UI.Views.Pages.HomePage"
+      ScrollViewer.CanContentScroll="False"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:vm="clr-namespace:TutorArchier.UI.ViewModels"
+      xmlns:conv="clr-namespace:TutorArchier.UI.Converters"
+      xmlns:controls="clr-namespace:TutorArchier.UI.Controls"
+      mc:Ignorable="d"
+      d:DataContext="{d:DesignInstance vm:HomeViewModel}"
+      d:DesignWidth="1000"
+      d:DesignHeight="700"
+      Title="Ana sayfa">
+  <Page.Resources>
+    <conv:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+    <conv:BoolToVisibilityConverter x:Key="InverseBoolToVisibility" Invert="True" />
+  </Page.Resources>
+
+  <!-- The page scrolls itself: CanContentScroll="False" on the Page stops WPF-UI from wrapping it in a second ScrollViewer. -->
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Style="{StaticResource PageColumn}">
+      <!-- ffmpeg missing: one calm card with the way out, instead of an alarm-red bar. -->
+      <Border Margin="0,0,0,28"
+              Style="{StaticResource Panel}"
+              Visibility="{Binding IsFfmpegMissing, Converter={StaticResource BoolToVisibility}}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <Border Background="{DynamicResource Brush.WarningSubtle}" Style="{StaticResource IconTile}">
+            <ui:SymbolIcon Filled="True" Foreground="{DynamicResource Brush.Warning}" Symbol="Warning24" />
+          </Border>
+          <StackPanel Grid.Column="1" Margin="16,0,16,0" VerticalAlignment="Center">
+            <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="ffmpeg kurulu değil" />
+            <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Caption}" Text="Analiz ve birleştirme için gerekiyor. Ayarlar'dan tek tıkla kurabilir ya da klasörünü gösterebilirsin." />
+          </StackPanel>
+          <ui:Button Grid.Column="2"
+                     VerticalAlignment="Center"
+                     Appearance="Primary"
+                     Command="{Binding OpenSettingsCommand}"
+                     Content="ffmpeg'i kur"
+                     Icon="{ui:SymbolIcon ArrowDownload24}" />
+        </Grid>
+      </Border>
+
+      <TextBlock Style="{StaticResource Text.Display}" Text="Bir klasörle başla" />
+      <TextBlock Margin="0,8,0,24"
+                 Style="{StaticResource Text.Muted}"
+                 Text="Klasördeki videoları analiz et ya da bölümlü, altyazılı MKV'lerde birleştir (tek video ya da her alt klasöre bir video). Orijinal dosyalarına dokunulmaz." />
+
+      <Grid x:Name="DropZone"
+            Height="232"
+            AllowDrop="True"
+            Background="Transparent"
+            DragEnter="OnDragOver"
+            DragOver="OnDragOver"
+            DragLeave="OnDragLeave"
+            Drop="OnDrop">
+        <Rectangle Fill="{DynamicResource Brush.Surface}"
+                   RadiusX="12"
+                   RadiusY="12"
+                   Stroke="{DynamicResource Brush.Border}"
+                   StrokeDashArray="5 4"
+                   StrokeThickness="1.5" />
+
+        <StackPanel x:Name="DropPrompt" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <Border Width="56" Height="56" CornerRadius="14" HorizontalAlignment="Center" Style="{StaticResource IconTile}">
+            <ui:SymbolIcon FontSize="28" Symbol="FolderArrowRight24" />
+          </Border>
+          <TextBlock Margin="0,16,0,0"
+                     HorizontalAlignment="Center"
+                     Style="{StaticResource Text.Subtitle}"
+                     Text="Bir klasörü buraya sürükle" />
+          <TextBlock Margin="0,4,0,0"
+                     HorizontalAlignment="Center"
+                     Style="{StaticResource Text.Caption}"
+                     Text="Sol yarıya bırakırsan analiz, sağ yarıya bırakırsan birleştirme açılır" />
+          <ui:Button Margin="0,16,0,0"
+                     HorizontalAlignment="Center"
+                     Command="{Binding PickFolderCommand}"
+                     Content="Klasör seç"
+                     Icon="{ui:SymbolIcon FolderOpen24}"
+                     ToolTip="Klasör aç (Ctrl+O)" />
+        </StackPanel>
+
+        <!-- Shown while dragging: the half the folder is dropped on picks the flow. Not hit-testable,
+             so the drag events stay on DropZone and don't flicker between children. -->
+        <Grid x:Name="SplitOverlay" IsHitTestVisible="False" Visibility="Collapsed">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Border x:Name="AnalyzeHalf" Margin="6,6,3,6" BorderThickness="2" CornerRadius="10,4,4,10">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+              <ui:SymbolIcon HorizontalAlignment="Center" FontSize="32" Symbol="DataHistogram24" />
+              <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" Style="{StaticResource Text.Subtitle}" Text="Analiz et" />
+            </StackPanel>
+          </Border>
+          <Border x:Name="MergeHalf" Grid.Column="1" Margin="3,6,6,6" BorderThickness="2" CornerRadius="4,10,10,4">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+              <ui:SymbolIcon HorizontalAlignment="Center" FontSize="32" Symbol="VideoClipMultiple24" />
+              <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" Style="{StaticResource Text.Subtitle}" Text="Birleştir" />
+            </StackPanel>
+          </Border>
+        </Grid>
+      </Grid>
+
+      <controls:CourseHeader Margin="0,16,0,0" DataContext="{Binding Workspace}" Visibility="{Binding HasFolder, Converter={StaticResource BoolToVisibility}}" />
+
+      <TextBlock Style="{StaticResource Text.Section}" Text="Ne yapmak istiyorsun?" />
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="12" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <ui:CardAction Padding="16"
+                       AutomationProperties.Name="Analiz et"
+                       Command="{Binding AnalyzeCommand}"
+                       ToolTip="Analiz (Ctrl+1)">
+          <StackPanel Orientation="Horizontal">
+            <Border Style="{StaticResource IconTile}">
+              <ui:SymbolIcon Symbol="DataHistogram24" />
+            </Border>
+            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+              <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="Analiz et" />
+              <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Caption}" Text="Süre, codec ve altyazı kapsamını raporla" />
+            </StackPanel>
+          </StackPanel>
+        </ui:CardAction>
+        <ui:CardAction Grid.Column="2"
+                       Padding="16"
+                       AutomationProperties.Name="Birleştir"
+                       Command="{Binding MergeCommand}"
+                       ToolTip="Birleştir (Ctrl+2)">
+          <StackPanel Orientation="Horizontal">
+            <Border Style="{StaticResource IconTile}">
+              <ui:SymbolIcon Symbol="VideoClipMultiple24" />
+            </Border>
+            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+              <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="Birleştir" />
+              <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Caption}" Text="Bölümlü, altyazılı MKV oluştur" />
+            </StackPanel>
+          </StackPanel>
+        </ui:CardAction>
+      </Grid>
+      <TextBlock Margin="2,10,0,0"
+                 Style="{StaticResource Text.Caption}"
+                 Text="Önce bir klasör seç."
+                 Visibility="{Binding Workspace.HasFolder, Converter={StaticResource InverseBoolToVisibility}}" />
+
+      <!-- Courses opened before: one click reopens them in Merge. -->
+      <StackPanel Visibility="{Binding HasRecents, Converter={StaticResource BoolToVisibility}}">
+        <TextBlock Style="{StaticResource Text.Section}" Text="Son açılanlar" />
+        <ItemsControl ItemsSource="{Binding Recents}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:RecentRow}">
+              <ui:CardAction Width="228"
+                             Margin="0,0,12,12"
+                             Padding="0"
+                             HorizontalContentAlignment="Stretch"
+                             VerticalContentAlignment="Stretch"
+                             AutomationProperties.Name="{Binding Name}"
+                             Command="{Binding DataContext.OpenRecentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                             CommandParameter="{Binding}"
+                             IsChevronVisible="False"
+                             ToolTip="{Binding Path}">
+                <StackPanel>
+                  <controls:VideoThumb Height="128" CornerRadius="8,8,0,0" Video="{Binding Cover}" />
+                  <StackPanel Margin="14,12,14,14">
+                    <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                    <TextBlock Margin="0,4,0,0" Style="{StaticResource Text.Caption}" Text="{Binding Summary}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                    <TextBlock Margin="0,2,0,0" Style="{StaticResource Text.Caption}" Text="{Binding OpenedAt}" />
+                  </StackPanel>
+                </StackPanel>
+              </ui:CardAction>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</Page>
