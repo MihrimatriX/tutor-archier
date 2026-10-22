@@ -1,0 +1,50 @@
+# Tag push (git tag v0.2.0 && git push origin v0.2.0) → tests, single exe, GitHub release.
+# "Run workflow" on the Actions tab builds the same exe as a downloadable artifact without releasing.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test and package
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF_TYPE -eq 'tag') { ./publish.ps1 -Version $env:GITHUB_REF_NAME.TrimStart('v') }
+          else { ./publish.ps1 }
+
+      - name: Upload exe (manual run)
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: TutorArchier-win-x64
+          path: artifacts/TutorArchier-*.exe
+
+      - name: Create release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Prepended to GitHub's generated change list. The FFmpeg notice is required: the exe redistributes a GPL build.
+          NOTES: |
+            **İndir:** aşağıdaki `TutorArchier-*-win-x64.exe`. Tek dosya, kurulum yok; .NET ya da ffmpeg ayrıca gerekmez.
+            Windows SmartScreen uyarı verirse "Ek bilgi › Yine de çalıştır".
+
+            Bu exe [FFmpeg](https://ffmpeg.org) içerir: gyan.dev "essentials" derlemesi, GPLv3 lisanslı.
+            Derlemenin içeriği ve kaynakları: https://www.gyan.dev/ffmpeg/builds/ · https://github.com/GyanD/codexffmpeg
+        run: |
+          $exe = (Resolve-Path artifacts/TutorArchier-*.exe).Path
+          gh release create $env:GITHUB_REF_NAME $exe --title "TutorArchier $env:GITHUB_REF_NAME" --generate-notes --notes $env:NOTES

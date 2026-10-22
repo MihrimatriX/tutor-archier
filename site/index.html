@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TutorArchier</title>
+<meta name="description" content="Ders ders inmiş video kursları bölümlü, altyazılı tek bir MKV ya da MP4'te birleştiren Windows uygulaması.">
+<link rel="icon" href="icon.ico">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1b1b22; --muted: #5d5d6c; --line: #e6e6ee; --card: #f6f6fa;
+    --accent: #5b47f0; --on-accent: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111117; --fg: #ececf2; --muted: #9c9cad; --line: #26262f; --card: #18181f; --accent: #a99dff; --on-accent: #111117; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 16px 40px; }
+  header { display: flex; align-items: center; gap: 14px; }
+  .logo { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #8b7bff, #4f7bff);
+          display: grid; place-items: center; }
+  .logo svg { width: 28px; height: 28px; fill: #fff; }
+  h1 { font-size: 28px; margin: 0; letter-spacing: -0.01em; }
+  .lead { font-size: 19px; color: var(--muted); margin: 20px 0 28px; }
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .btn { display: inline-block; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+  .btn.primary { background: var(--accent); color: var(--on-accent); }
+  .btn.ghost { border: 1px solid var(--line); color: var(--fg); }
+  .note { color: var(--muted); font-size: 14px; }
+  figure { margin: 40px 0; }
+  figure img { width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid var(--line); }
+  figcaption { color: var(--muted); font-size: 14px; margin-top: 8px; }
+  h2 { font-size: 20px; margin: 44px 0 12px; }
+  ul.features { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  ul.features li { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  ul.features b { display: block; }
+  ol { padding-left: 20px; }
+  pre { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+        overflow-x: auto; font-size: 13px; line-height: 1.5; }
+  a { color: var(--accent); }
+  footer { border-top: 1px solid var(--line); margin-top: 56px; padding-top: 16px; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="logo" aria-hidden="true">
+      <!-- Archive glyph, same idea as the app's Archive24 logo -->
+      <svg viewBox="0 0 24 24"><path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h15A1.5 1.5 0 0 1 21 4.5v2A1.5 1.5 0 0 1 19.5 8h-15A1.5 1.5 0 0 1 3 6.5v-2ZM4 9.5h16v8.75A2.75 2.75 0 0 1 17.25 21H6.75A2.75 2.75 0 0 1 4 18.25V9.5Zm6 3a.75.75 0 0 0 0 1.5h4a.75.75 0 0 0 0-1.5h-4Z"/></svg>
+    </div>
+    <h1>TutorArchier</h1>
+  </header>
+
+  <p class="lead">Ders ders inmiş bir video kursunu, her dersin bir bölüm olduğu altyazılı tek bir MKV ya da MP4'te
+    toplar. İsterseniz gözle fark edilmeyecek kalitede çok daha küçük bir HEVC arşivine çevirir.</p>
+
+  <div class="actions">
+    <a class="btn primary" href="https://github.com/MihrimatriX/tutor-archier/releases/latest">Windows için indir</a>
+    <a class="btn ghost" href="https://github.com/MihrimatriX/tutor-archier">Kaynak kod</a>
+    <span class="note">Tek exe · kurulum yok · Windows 10/11, 64 bit</span>
+  </div>
+
+  <figure>
+    <img src="shots/merge.png" alt="Birleştir ekranı: seçenekler, hedef format, altyazılar ve oluşacak videolar" width="1280" height="1395">
+    <figcaption>Birleştir ekranı: iki bölüm klasörlü bir kurs iki ayrı videoya dönüşüyor, okunamayan dosya zip'e gidiyor.</figcaption>
+  </figure>
+
+  <h2>Ne yapar?</h2>
+  <ul class="features">
+    <li><b>Analiz</b>Klasördeki her videoyu okur; süre, boyut, codec ve çözünürlük dağılımını, altyazı kapsamını,
+      okunamayan ya da sesi olmayan dosyaları gösterir. Aynı klasör ikinci kez çok daha hızlı açılır.</li>
+    <li><b>Kayıpsız birleştirme</b>Aynı formattaki dersler yeniden kodlanmadan birleşir. Farklı olanlar yalnızca
+      gerektiği kadar işlenir: önce yeniden paketleme, gerekirse yalnızca ses, en son görüntü. Sesi olmayan derslere
+      sessiz ses eklenir, sesli derslerin sesi hiçbir zaman atılmaz.</li>
+    <li><b>Bölümler ve altyazılar</b>Her ders dosya adıyla bir bölüm olur. Aynı dildeki altyazılar tek bir track'te
+      toplanır ve dersin başlangıcına kaydırılır.</li>
+    <li><b>Sıkıştırarak arşivleme</b>HEVC 10-bit'e kodlar, kaliteyi VMAF ile ölçer ve farkın seçilmediği en küçük
+      boyutu bulur. Kuyruğa eklemeden önce tahmini boyutu görürsünüz.</li>
+    <li><b>Her alt klasör ayrı video</b>Bölüm klasörlerine ayrılmış kurslarda her klasör kendi videosu olur.
+      Anahtar kapatılınca bütün kurs tek bir bölümlü video olur.</li>
+    <li><b>MKV ya da MP4</b>Varsayılan MKV. "MP4 olarak kaydet" ile telefon, TV ve tarayıcıların açtığı bölümlü bir
+      MP4 çıkar; altyazılar MP4'ün metin altyazısına çevrilir.</li>
+    <li><b>Ek dosyalar</b>PDF, kaynak kod, görseller gibi videoya girmeyen her şey klasör yapısı korunarak bir zip'e
+      konur.</li>
+    <li><b>Kuyruk</b>İşler sırayla çalışır, bir işin adımları paralel yürür (ekran kartıyla iki ders aynı anda
+      kodlanır, zip yanında hazırlanır). Duraklatılan ya da uygulama kapanınca yarıda kalan iş kaldığı dersten devam
+      eder. İlerleme görev çubuğunda görünür, pencere arkadayken iş bitince Windows bildirimi gelir.</li>
+    <li><b>Donanım hızlandırma</b>NVIDIA (NVENC) ve AMD (AMF) kartlarını kendisi test eder, olmazsa işlemciye düşer.</li>
+  </ul>
+
+  <h2>Nasıl görünür?</h2>
+  <pre>Python Kursu\                     Python Kursu (MKV)\
+├── 01 Giriş\                     ├── 01 Giriş.mkv     ← 2 bölüm, eng + tur
+│   ├── 01 Kurulum.mp4            └── 02 Temeller.mkv  ← 2 bölüm, tur
+│   ├── 01 Kurulum.en.srt
+│   ├── 01 Kurulum.tr.srt
+│   └── 02 İlk program.mp4
+└── 02 Temeller\
+    ├── 01 Değişkenler.mp4
+    └── 02 Döngüler.mkv</pre>
+
+  <figure>
+    <img src="shots/analysis.png" alt="Analiz ekranı: video sayısı, süre, boyut, altyazı kapsamı, format dağılımı, sorunlu dosyalar ve dosya listesi" width="1280" height="1170">
+    <figcaption>Analiz ekranı: sesi olmayan ders ve okunamayan dosya birleştirmeden önce görünür.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="shots/hardware.png" alt="Ayarlar: ffmpeg sürümü ve ekran kartındaki her encoder'ın test sonucu" width="1280" height="1150">
+    <figcaption>Her encoder bir deneme kodlamasıyla test edilir; çalışmayan bir şey varsa işlemciye düşülür.</figcaption>
+  </figure>
+
+  <h2>Kullanım</h2>
+  <ol>
+    <li>Exe'yi indirip çalıştırın. İlk açılışta ekran kartı test edilir ve kısa bir hız ölçümü yapılır.</li>
+    <li>Kurs klasörünü seçin (ya da klasörü exe'nin üzerine sürükleyin). Son açılan kurslar ana sayfada kalır.</li>
+    <li>Birleştir ekranında seçenekleri ayarlayıp kuyruğa ekleyin.</li>
+  </ol>
+  <p>Orijinal dosyalara hiçbir zaman yazılmaz.</p>
+
+  <footer>
+    Bu uygulama <a href="https://ffmpeg.org">FFmpeg</a> içerir (gyan.dev "essentials" derlemesi, GPLv3 lisanslı;
+    kaynaklar: <a href="https://www.gyan.dev/ffmpeg/builds/">gyan.dev/ffmpeg/builds</a>).
+  </footer>
+</main>
+</body>
+</html>

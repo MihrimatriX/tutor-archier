@@ -1,0 +1,278 @@
+<Page x:Class="TutorArchier.UI.Views.Pages.AnalysisPage"
+      ScrollViewer.CanContentScroll="False"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:vm="clr-namespace:TutorArchier.UI.ViewModels"
+      xmlns:media="clr-namespace:TutorArchier.Engine.Media;assembly=TutorArchier.Engine"
+      xmlns:controls="clr-namespace:TutorArchier.UI.Controls"
+      xmlns:conv="clr-namespace:TutorArchier.UI.Converters"
+      mc:Ignorable="d"
+      d:DataContext="{d:DesignInstance vm:AnalysisViewModel}"
+      d:DesignWidth="1000"
+      d:DesignHeight="900"
+      Title="Analiz">
+  <Page.Resources>
+    <conv:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+    <conv:BoolToVisibilityConverter x:Key="InverseBoolToVisibility" Invert="True" />
+    <conv:NullToVisibilityConverter x:Key="NullToVisibility" />
+    <conv:NullToVisibilityConverter x:Key="InverseNullToVisibility" Invert="True" />
+
+    <Style x:Key="StatValue" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+      <Setter Property="FontFamily" Value="{StaticResource Font.Display}" />
+      <Setter Property="FontSize" Value="24" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,6,0,2" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <Style x:Key="Cell" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- Subtitle coverage cell: green tick or a muted dash, never colour alone. -->
+    <Style x:Key="Coverage" TargetType="TextBlock" BasedOn="{StaticResource Cell}">
+      <Setter Property="Text" Value="—" />
+      <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+
+    <DataTemplate x:Key="DistributionTemplate" DataType="{x:Type vm:DistributionRow}">
+      <Grid Margin="0,0,0,12">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock FontWeight="SemiBold" Style="{StaticResource Text.Body}" Text="{Binding Label}" />
+        <TextBlock Grid.Column="1" Style="{StaticResource Text.Caption}" Text="{Binding Detail}" VerticalAlignment="Center" />
+        <ProgressBar Grid.Row="1" Grid.ColumnSpan="2" Height="4" Margin="0,6,0,0" Maximum="100" Value="{Binding Share, Mode=OneWay}" />
+      </Grid>
+    </DataTemplate>
+  </Page.Resources>
+
+  <!-- The page scrolls itself: CanContentScroll="False" on the Page stops WPF-UI from wrapping it in a second ScrollViewer. -->
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Style="{StaticResource PageColumn}">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Style="{StaticResource Text.Display}" Text="Analiz" />
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+          <ui:Button Command="{Binding PickFolderCommand}" Content="Klasör seç" Icon="{ui:SymbolIcon FolderOpen24}" />
+          <ui:Button Margin="8,0,0,0"
+                     Command="{Binding RescanCommand}"
+                     Content="Yeniden tara"
+                     Icon="{ui:SymbolIcon ArrowClockwise24}"
+                     Visibility="{Binding Workspace.HasFolder, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button Margin="8,0,0,0"
+                     Appearance="Primary"
+                     Command="{Binding GoToMergeCommand}"
+                     Content="Birleştir"
+                     Icon="{ui:SymbolIcon VideoClipMultiple24}"
+                     Visibility="{Binding HasResult, Converter={StaticResource BoolToVisibility}}" />
+        </StackPanel>
+      </Grid>
+      <controls:CourseHeader Margin="0,20,0,0" DataContext="{Binding Workspace}" Visibility="{Binding HasFolder, Converter={StaticResource BoolToVisibility}}" />
+      <TextBlock Margin="0,8,0,0"
+                 Style="{StaticResource Text.Muted}"
+                 Text="Klasördeki video ve altyazıları tarar: süre, boyut, codec ve çözünürlük dağılımı, EN/TR altyazı kapsamı ve sorunlu dosyalar."
+                 Visibility="{Binding Workspace.HasFolder, Converter={StaticResource InverseBoolToVisibility}}" />
+
+      <!-- Scanning -->
+      <Border Margin="0,24,0,0" Style="{StaticResource Panel}" Visibility="{Binding Workspace.IsAnalyzing, Converter={StaticResource BoolToVisibility}}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <StackPanel VerticalAlignment="Center">
+            <controls:StatusIndicator Kind="Running" Text="{Binding Workspace.AnalysisText}" />
+            <ProgressBar Height="4" Margin="24,10,0,0" Maximum="100" Value="{Binding Workspace.AnalysisProgress, Mode=OneWay}" />
+          </StackPanel>
+          <ui:Button Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" Command="{Binding CancelCommand}" Content="Durdur" />
+        </Grid>
+      </Border>
+
+      <Border Margin="0,24,0,0"
+              Style="{StaticResource Panel}"
+              Visibility="{Binding Workspace.AnalysisError, Converter={StaticResource NullToVisibility}}">
+        <controls:StatusIndicator Kind="Danger" Text="{Binding Workspace.AnalysisError}" />
+      </Border>
+
+      <StackPanel Visibility="{Binding HasResult, Converter={StaticResource BoolToVisibility}}">
+        <!-- Summary -->
+        <UniformGrid Margin="-6,24,-6,0" Columns="4">
+          <Border Margin="6,0" Style="{StaticResource Panel}">
+            <StackPanel>
+              <TextBlock Style="{StaticResource Text.Caption}" Text="Video" />
+              <TextBlock Style="{StaticResource StatValue}" Text="{Binding VideoCount}" />
+              <TextBlock Style="{StaticResource Text.Caption}" Text="{Binding SubtitleCount}" />
+            </StackPanel>
+          </Border>
+          <Border Margin="6,0" Style="{StaticResource Panel}">
+            <StackPanel>
+              <TextBlock Style="{StaticResource Text.Caption}" Text="Toplam süre" />
+              <TextBlock Style="{StaticResource StatValue}" Text="{Binding TotalDuration}" />
+              <TextBlock Style="{StaticResource Text.Caption}" Text="birleşince tek dosya" />
+            </StackPanel>
+          </Border>
+          <Border Margin="6,0" Style="{StaticResource Panel}">
+            <StackPanel>
+              <TextBlock Style="{StaticResource Text.Caption}" Text="Toplam boyut" />
+              <TextBlock Style="{StaticResource StatValue}" Text="{Binding TotalSize}" />
+              <TextBlock Style="{StaticResource Text.Caption}" Text="kaynak dosyalar" />
+            </StackPanel>
+          </Border>
+          <Border Margin="6,0" Style="{StaticResource Panel}">
+            <StackPanel>
+              <TextBlock Style="{StaticResource Text.Caption}" Text="Altyazı kapsamı" />
+              <TextBlock Style="{StaticResource StatValue}">
+                <Run Text="EN" FontSize="14" Foreground="{DynamicResource Brush.TextMuted}" />
+                <Run Text="{Binding EnCoverage, Mode=OneWay}" />
+              </TextBlock>
+              <TextBlock Style="{StaticResource Text.Caption}">
+                <Run Text="TR" FontWeight="SemiBold" />
+                <Run Text="{Binding TrCoverage, Mode=OneWay}" />
+                <Run Text="videoda" />
+              </TextBlock>
+            </StackPanel>
+          </Border>
+        </UniformGrid>
+
+        <!-- Distribution -->
+        <TextBlock Style="{StaticResource Text.Section}" Text="Format dağılımı" />
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Border Style="{StaticResource Panel}">
+            <StackPanel>
+              <TextBlock Margin="0,0,0,12" Style="{StaticResource Text.Overline}" Text="CODEC" />
+              <ItemsControl ItemTemplate="{StaticResource DistributionTemplate}" ItemsSource="{Binding Codecs}" />
+            </StackPanel>
+          </Border>
+          <Border Grid.Column="2" Style="{StaticResource Panel}">
+            <StackPanel>
+              <TextBlock Margin="0,0,0,12" Style="{StaticResource Text.Overline}" Text="ÇÖZÜNÜRLÜK" />
+              <ItemsControl ItemTemplate="{StaticResource DistributionTemplate}" ItemsSource="{Binding Resolutions}" />
+            </StackPanel>
+          </Border>
+        </Grid>
+
+        <!-- Problems -->
+        <TextBlock Style="{StaticResource Text.Section}" Text="{Binding ProblemsTitle}" />
+        <Border Style="{StaticResource Panel}">
+          <Grid>
+            <controls:StatusIndicator Kind="Success"
+                                      Text="Birleştirmeyi engelleyecek bir şey bulunmadı."
+                                      Visibility="{Binding Problems.Count, Converter={x:Static conv:ZeroToVisibilityConverter.Instance}}" />
+            <ItemsControl ItemsSource="{Binding Problems}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type media:AnalysisProblem}">
+                  <Grid Margin="0,4">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <controls:StatusIndicator x:Name="Icon" VerticalAlignment="Top" Kind="Warning" />
+                    <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                      <TextBlock Style="{StaticResource Text.Body}" Text="{Binding Path}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                      <TextBlock Style="{StaticResource Text.Caption}" Text="{Binding Message}" />
+                    </StackPanel>
+                  </Grid>
+                  <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding IsError}" Value="True">
+                      <Setter TargetName="Icon" Property="Kind" Value="Danger" />
+                    </DataTrigger>
+                  </DataTemplate.Triggers>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Grid>
+        </Border>
+
+        <!-- Files -->
+        <TextBlock Style="{StaticResource Text.Section}" Text="Dosyalar" />
+        <Border Padding="8,12" Style="{StaticResource Panel}">
+          <StackPanel>
+            <Grid Margin="12,0,12,8">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="40" />
+                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="96" />
+                <ColumnDefinition Width="72" />
+                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="40" />
+                <ColumnDefinition Width="40" />
+              </Grid.ColumnDefinitions>
+              <TextBlock Style="{StaticResource Text.Overline}" Text="#" />
+              <TextBlock Grid.Column="2" Style="{StaticResource Text.Overline}" Text="DOSYA" />
+              <TextBlock Grid.Column="3" Style="{StaticResource Text.Overline}" Text="SÜRE" />
+              <TextBlock Grid.Column="4" Style="{StaticResource Text.Overline}" Text="ÇÖZÜNÜRLÜK" />
+              <TextBlock Grid.Column="5" Style="{StaticResource Text.Overline}" Text="CODEC" />
+              <TextBlock Grid.Column="6" Style="{StaticResource Text.Overline}" Text="BOYUT" TextAlignment="Right" />
+              <TextBlock Grid.Column="7" Style="{StaticResource Text.Overline}" Text="EN" TextAlignment="Center" />
+              <TextBlock Grid.Column="8" Style="{StaticResource Text.Overline}" Text="TR" TextAlignment="Center" />
+            </Grid>
+            <Border Style="{StaticResource Divider}" />
+            <ListView MaxHeight="520" Margin="0,4,0,0" ItemsSource="{Binding Files}" Style="{StaticResource TableList}">
+              <ListView.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:AnalysisRow}">
+                  <Grid Height="48">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="40" />
+                      <ColumnDefinition Width="80" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="80" />
+                      <ColumnDefinition Width="96" />
+                      <ColumnDefinition Width="72" />
+                      <ColumnDefinition Width="80" />
+                      <ColumnDefinition Width="40" />
+                      <ColumnDefinition Width="40" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Foreground="{DynamicResource Brush.TextMuted}" Style="{StaticResource Cell}" Text="{Binding Number}" />
+                    <controls:VideoThumb Grid.Column="1" Width="64" Height="36" HorizontalAlignment="Left" CornerRadius="4" Video="{Binding FullPath}" />
+                    <TextBlock x:Name="PathCell" Grid.Column="2" Margin="0,0,12,0" Style="{StaticResource Cell}" Text="{Binding Path}" ToolTip="{Binding Path}" />
+                    <TextBlock Grid.Column="3" Style="{StaticResource Cell}" Text="{Binding Duration}" Typography.NumeralAlignment="Tabular" />
+                    <TextBlock Grid.Column="4" Style="{StaticResource Cell}" Text="{Binding Resolution}" />
+                    <TextBlock Grid.Column="5" Style="{StaticResource Cell}" Text="{Binding Codec}" />
+                    <TextBlock Grid.Column="6" Style="{StaticResource Cell}" Text="{Binding Size}" TextAlignment="Right" Typography.NumeralAlignment="Tabular" />
+                    <TextBlock x:Name="En" Grid.Column="7" Style="{StaticResource Coverage}" />
+                    <TextBlock x:Name="Tr" Grid.Column="8" Style="{StaticResource Coverage}" />
+                  </Grid>
+                  <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding HasEn}" Value="True">
+                      <Setter TargetName="En" Property="Text" Value="✓" />
+                      <Setter TargetName="En" Property="Foreground" Value="{DynamicResource Brush.Success}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding HasTr}" Value="True">
+                      <Setter TargetName="Tr" Property="Text" Value="✓" />
+                      <Setter TargetName="Tr" Property="Foreground" Value="{DynamicResource Brush.Success}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding HasProblem}" Value="True">
+                      <Setter TargetName="PathCell" Property="Foreground" Value="{DynamicResource Brush.Danger}" />
+                    </DataTrigger>
+                  </DataTemplate.Triggers>
+                </DataTemplate>
+              </ListView.ItemTemplate>
+            </ListView>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</Page>

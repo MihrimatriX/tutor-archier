@@ -1,0 +1,276 @@
+<Page x:Class="TutorArchier.UI.Views.Pages.SettingsPage"
+      ScrollViewer.CanContentScroll="False"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:vm="clr-namespace:TutorArchier.UI.ViewModels"
+      xmlns:controls="clr-namespace:TutorArchier.UI.Controls"
+      xmlns:conv="clr-namespace:TutorArchier.UI.Converters"
+      mc:Ignorable="d"
+      d:DataContext="{d:DesignInstance vm:SettingsViewModel}"
+      d:DesignWidth="1100"
+      d:DesignHeight="900"
+      Title="Ayarlar">
+  <Page.Resources>
+    <conv:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+    <conv:BoolToVisibilityConverter x:Key="InverseBoolToVisibility" Invert="True" />
+    <conv:NullToVisibilityConverter x:Key="NullToVisibility" />
+
+    <Style x:Key="ColumnHeader" TargetType="TextBlock" BasedOn="{StaticResource Text.Overline}">
+      <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+  </Page.Resources>
+
+  <!-- The page scrolls itself: CanContentScroll="False" on the Page stops WPF-UI from wrapping it in a second ScrollViewer. -->
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Style="{StaticResource PageColumn}">
+      <TextBlock Style="{StaticResource Text.Display}" Text="Ayarlar" />
+
+      <!-- Whatever is running (install, encoder tests, benchmark) shows here, whichever card started it. -->
+      <Border Margin="0,20,0,0" Style="{StaticResource Panel}" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <StackPanel VerticalAlignment="Center">
+            <controls:StatusIndicator Kind="Running" Text="{Binding BusyText, TargetNullValue='Çalışıyor…'}" />
+            <ProgressBar Height="4" Margin="24,10,0,0" Maximum="100" Value="{Binding Progress}" />
+          </StackPanel>
+          <ui:Button Grid.Column="1"
+                     Margin="16,0,0,0"
+                     VerticalAlignment="Center"
+                     Command="{Binding CancelCommand}"
+                     Content="İptal"
+                     Visibility="{Binding CanCancel, Converter={StaticResource BoolToVisibility}}" />
+        </Grid>
+      </Border>
+      <TextBlock Margin="0,12,0,0"
+                 Foreground="{DynamicResource Brush.Danger}"
+                 Style="{StaticResource Text.Body}"
+                 Text="{Binding OperationError}"
+                 Visibility="{Binding OperationError, Converter={StaticResource NullToVisibility}}" />
+
+      <!-- ffmpeg -->
+      <TextBlock Style="{StaticResource Text.Section}" Text="ffmpeg" />
+      <Border Style="{StaticResource Panel}">
+        <StackPanel>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border VerticalAlignment="Top" Style="{StaticResource IconTile}">
+              <ui:SymbolIcon Symbol="Wrench24" />
+            </Border>
+            <StackPanel Grid.Column="1" Margin="16,0,16,0" VerticalAlignment="Center">
+              <controls:StatusIndicator Kind="{Binding FfmpegStatus}" Text="{Binding FfmpegStatusText}" />
+              <TextBlock Margin="24,4,0,0"
+                         Style="{StaticResource Text.Mono}"
+                         Text="{Binding FfmpegPath}"
+                         Visibility="{Binding FfmpegPath, Converter={StaticResource NullToVisibility}}" />
+              <TextBlock Margin="24,4,0,0"
+                         Style="{StaticResource Text.Caption}"
+                         Text="Tek tıkla indirip kurabilir (yaklaşık 105 MB) ya da kurulu olduğu klasörü gösterebilirsin."
+                         Visibility="{Binding HasFfmpeg, Converter={StaticResource InverseBoolToVisibility}}" />
+            </StackPanel>
+            <StackPanel Grid.Column="2" VerticalAlignment="Top" Orientation="Horizontal">
+              <ui:Button Margin="0,0,8,0"
+                         Appearance="Primary"
+                         Command="{Binding InstallFfmpegCommand}"
+                         Content="Otomatik kur"
+                         Icon="{ui:SymbolIcon ArrowDownload24}"
+                         Visibility="{Binding CanInstallFfmpeg, Converter={StaticResource BoolToVisibility}}" />
+              <ui:Button Command="{Binding ChooseFfmpegFolderCommand}"
+                         Content="Klasör seç"
+                         Icon="{ui:SymbolIcon FolderOpen24}" />
+              <ui:Button Margin="8,0,0,0"
+                         Command="{Binding AutoLocateFfmpegCommand}"
+                         Content="Bilgisayarda ara"
+                         Icon="{ui:SymbolIcon Search24}" />
+            </StackPanel>
+          </Grid>
+
+          <TextBlock Margin="56,10,0,0"
+                     Foreground="{DynamicResource Brush.Warning}"
+                     Style="{StaticResource Text.Body}"
+                     Text="{Binding VersionWarning}"
+                     Visibility="{Binding VersionWarning, Converter={StaticResource NullToVisibility}}" />
+          <TextBlock Margin="56,10,0,0"
+                     Foreground="{DynamicResource Brush.Danger}"
+                     Style="{StaticResource Text.Body}"
+                     Text="{Binding FfmpegFolderError}"
+                     Visibility="{Binding FfmpegFolderError, Converter={StaticResource NullToVisibility}}" />
+
+          <WrapPanel Margin="56,16,0,-8" Visibility="{Binding HasFfmpeg, Converter={StaticResource BoolToVisibility}}">
+            <Border Style="{StaticResource Chip}" ToolTip="Kalite ölçümü (VMAF) için gerekli">
+              <controls:StatusIndicator Kind="{Binding LibVmafStatus}" Text="libvmaf · kalite ölçümü" />
+            </Border>
+            <Border Style="{StaticResource Chip}" ToolTip="Altyazıyı videoya gömmek için gerekli (libass)">
+              <controls:StatusIndicator Kind="{Binding SubtitlesStatus}" Text="libass · altyazı gömme" />
+            </Border>
+            <Border Style="{StaticResource Chip}" ToolTip="HDR içeriği SDR'ye dönüştürmek için gerekli">
+              <controls:StatusIndicator Kind="{Binding ZscaleStatus}" Text="zscale · HDR dönüşümü" />
+            </Border>
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- Hardware -->
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Style="{StaticResource Text.Section}" Text="Donanım" />
+        <StackPanel Grid.Column="1" Margin="0,18,0,6" VerticalAlignment="Bottom" Orientation="Horizontal">
+          <ui:Button Command="{Binding RetestCommand}"
+                     Content="Yeniden test et"
+                     Icon="{ui:SymbolIcon ArrowClockwise24}" />
+          <ui:Button Margin="8,0,0,0"
+                     Command="{Binding BenchmarkCommand}"
+                     Content="Hız ölçümü yap"
+                     Icon="{ui:SymbolIcon TopSpeed24}" />
+        </StackPanel>
+      </Grid>
+      <Border Style="{StaticResource Panel}">
+        <StackPanel>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="110" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Style="{StaticResource Text.Muted}" Text="İşlemci" />
+            <TextBlock Grid.Column="1" Style="{StaticResource Text.Body}" Text="{Binding CpuName, TargetNullValue='—'}" />
+            <TextBlock Grid.Row="1" Margin="0,8,0,0" Style="{StaticResource Text.Muted}" Text="Ekran kartı" />
+            <ItemsControl Grid.Row="1" Grid.Column="1" Margin="0,8,0,0" ItemsSource="{Binding Gpus}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Style="{StaticResource Text.Body}" Text="{Binding}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Grid.Row="1"
+                       Grid.Column="1"
+                       Margin="0,8,0,0"
+                       Style="{StaticResource Text.Body}"
+                       Text="—"
+                       Visibility="{Binding HasGpus, Converter={StaticResource InverseBoolToVisibility}}" />
+          </Grid>
+
+          <!-- Encoder table -->
+          <Grid Margin="0,24,0,8">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="170" />
+              <ColumnDefinition Width="110" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="64" />
+              <ColumnDefinition Width="72" />
+              <ColumnDefinition Width="96" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Style="{StaticResource ColumnHeader}" Text="ENCODER" />
+            <TextBlock Grid.Column="1" Style="{StaticResource ColumnHeader}" Text="AYGIT" />
+            <TextBlock Grid.Column="2" Style="{StaticResource ColumnHeader}" Text="DURUM" />
+            <TextBlock Grid.Column="3" Style="{StaticResource ColumnHeader}" Text="10-BIT" />
+            <TextBlock Grid.Column="4" Style="{StaticResource ColumnHeader}" Text="B-FRAME" />
+            <TextBlock Grid.Column="5" Style="{StaticResource ColumnHeader}" Text="HIZ (1080p)" TextAlignment="Right" />
+          </Grid>
+          <Border Style="{StaticResource Divider}" />
+          <ItemsControl ItemsSource="{Binding Encoders}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:EncoderRow}">
+                <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1">
+                  <Grid x:Name="Row" Margin="0,10">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="170" />
+                      <ColumnDefinition Width="110" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="64" />
+                      <ColumnDefinition Width="72" />
+                      <ColumnDefinition Width="96" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock Style="{StaticResource Text.Body}" Text="{Binding Name}" />
+                      <TextBlock x:Name="ScopeNote"
+                                 Style="{StaticResource Text.Caption}"
+                                 Text="şimdilik kullanılmıyor"
+                                 Visibility="Collapsed" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource Text.Muted}" Text="{Binding Device}" />
+                    <controls:StatusIndicator Grid.Column="2"
+                                              VerticalAlignment="Center"
+                                              Kind="{Binding Status}"
+                                              Text="{Binding StatusText}"
+                                              ToolTip="{Binding StatusDetail}"
+                                              ToolTipService.IsEnabled="{Binding StatusDetail, Converter={x:Static conv:NotNullConverter.Instance}}" />
+                    <controls:StatusIndicator Grid.Column="3"
+                                              VerticalAlignment="Center"
+                                              Kind="{Binding TenBit}"
+                                              ToolTip="{Binding TenBitDetail}"
+                                              ToolTipService.IsEnabled="{Binding TenBitDetail, Converter={x:Static conv:NotNullConverter.Instance}}" />
+                    <controls:StatusIndicator Grid.Column="4" VerticalAlignment="Center" Kind="{Binding BFrames}" />
+                    <TextBlock Grid.Column="5"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource Text.Number}"
+                               Text="{Binding Speed}"
+                               TextAlignment="Right" />
+                  </Grid>
+                </Border>
+                <DataTemplate.Triggers>
+                  <DataTrigger Binding="{Binding IsOutOfScope}" Value="True">
+                    <Setter TargetName="Row" Property="Opacity" Value="0.55" />
+                    <Setter TargetName="ScopeNote" Property="Visibility" Value="Visible" />
+                  </DataTrigger>
+                </DataTemplate.Triggers>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <TextBlock Margin="0,14,0,0" Style="{StaticResource Text.Caption}">
+            <Run Text="{Binding TestedAtText, Mode=OneWay}" />
+            <Run Text=" · " />
+            <Run Text="{Binding BenchmarkText, Mode=OneWay}" />
+            <Run Text=" · Her encoder 1 karelik deneme kodlamasıyla test edilir; özellikler tahmin edilmez, ölçülür." />
+          </TextBlock>
+        </StackPanel>
+      </Border>
+
+      <!-- Appearance -->
+      <TextBlock Style="{StaticResource Text.Section}" Text="Görünüm" />
+      <ui:CardControl Padding="16,14" Icon="{ui:SymbolIcon DarkTheme24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Style="{StaticResource Text.Body}" Text="Tema" />
+            <TextBlock Style="{StaticResource Text.Caption}" Text="Koyu tema önizleme karelerini daha iyi okutur." />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ComboBox MinWidth="200"
+                  DisplayMemberPath="Value"
+                  ItemsSource="{Binding ThemeOptions}"
+                  SelectedValue="{Binding SelectedTheme}"
+                  SelectedValuePath="Key" />
+      </ui:CardControl>
+      <ui:CardControl Margin="0,4,0,0" Padding="16,14" Icon="{ui:SymbolIcon DesktopPulse24}">
+        <ui:CardControl.Header>
+          <StackPanel Margin="0,0,24,0">
+            <TextBlock Style="{StaticResource Text.Body}" Text="Arayüzde donanım hızlandırma" />
+            <TextBlock Style="{StaticResource Text.Caption}"
+                       Text="Pencereyi ekran kartıyla çizer. Bazı sürücülerde pencere boş ya da tek renk görünebilir; öyle olursa uygulamayı --software-ui ile başlatıp bunu kapat. Video kodlamayı etkilemez." />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch IsChecked="{Binding HardwareAcceleratedUi}" />
+      </ui:CardControl>
+      <controls:StatusIndicator Margin="4,10,0,0"
+                                Kind="Info"
+                                Text="Değişiklik uygulama yeniden başlatılınca geçerli olur."
+                                Visibility="{Binding RestartRequired, Converter={StaticResource BoolToVisibility}}" />
+    </StackPanel>
+  </ScrollViewer>
+</Page>
